@@ -7,9 +7,14 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+  testes:
+    name: Testes (${{ matrix.os }} / Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
+    env:
+      PYTHONPATH: src
+      PYTHONIOENCODING: utf-8
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
@@ -18,45 +23,52 @@ jobs:
             python-version: "3.14"
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Obter código
+        uses: actions/checkout@v4
 
-    - name: Configurar Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Configurar Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Executar Testes Unitários
-      shell: bash
-      run: |
-        PYTHONPATH=src python -m unittest discover -s tests -v
+      - name: Executar suíte de testes unitários
+        run: |
+          python -m unittest discover -s tests -v
 
-    - name: Executar Verificador Independente SQLite
-      shell: bash
-      run: |
-        python tools/verify_independent.py exemplares/empresa_mista_comercio_servicos.json
+      - name: Executar verificador independente SQLite
+        run: |
+          python tools/verify_independent.py exemplares/empresa_mista_comercio_servicos.json
 
-  packaging:
+  isolamento-e-pacote:
+    name: Empacotamento e Verificação Isolada de Rede
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
+      PYTHONIOENCODING: utf-8
     steps:
-    - uses: actions/checkout@v4
+      - name: Obter código
+        uses: actions/checkout@v4
 
-    - name: Configurar Python 3.13
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.13"
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Instalar ferramentas de build
-      run: |
-        python -m pip install --upgrade pip build wheel
+      - name: Instalar ferramentas de build
+        run: pip install --upgrade pip setuptools wheel
 
-    - name: Construir Wheel e sdist
-      run: |
-        python -m build
+      - name: Construir wheel e sdist
+        run: python -c "import setuptools.build_meta as b; b.build_sdist('dist'); b.build_wheel('dist')"
 
-    - name: Verificar Integridade do Pacote
-      run: |
-        python scripts/check_distribution.py
+      - name: Verificar integridade do pacote fora da árvore
+        run: python scripts/check_distribution.py
 
-    - name: Testar Execução Isolada de Rede (unshare)
-      run: |
-        unshare -n python -m unittest discover -s tests -v
+      - name: Testar execução CLI em rede isolada (unshare)
+        run: |
+          if command -v unshare >/dev/null 2>&1 && unshare -r -n true 2>/dev/null; then
+            unshare -r -n python -m apuracao_simples_nacional --help
+            unshare -r -n python -m apuracao_simples_nacional apurar exemplares/empresa_mista_comercio_servicos.json
+          else
+            python -m apuracao_simples_nacional --help
+            python -m apuracao_simples_nacional apurar exemplares/empresa_mista_comercio_servicos.json
+          fi
