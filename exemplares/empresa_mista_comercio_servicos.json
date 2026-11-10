@@ -1,0 +1,30 @@
+{
+  "razao_social": "Tech & Varejo Soluções Integradas Ltda ME",
+  "cnpj": "12.345.678/0001-90",
+  "competencia_mes_ano": "11/2026",
+  "rbt12_centavos": 85000000,
+  "fs12_centavos": 25500000,
+  "atividades": [
+    {
+      "codigo": "COM-01",
+      "descricao": "Comércio Varejista de Equipamentos e Periféricos",
+      "anexo_base": "ANEXO_I",
+      "sujeito_fator_r": false,
+      "receita_mes_centavos": 4200000
+    },
+    {
+      "codigo": "DEV-02",
+      "descricao": "Desenvolvimento e Manutenção de Softwares Customizados",
+      "anexo_base": "ANEXO_V",
+      "sujeito_fator_r": true,
+      "receita_mes_centavos": 6800000
+    },
+    {
+      "codigo": "SUP-03",
+      "descricao": "Suporte Técnico e Treinamento Presencial de TI",
+      "anexo_base": "ANEXO_III",
+      "sujeito_fator_r": false,
+      "receita_mes_centavos": 1500000
+    }
+  ]
+}
